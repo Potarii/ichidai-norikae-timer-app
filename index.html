@@ -1540,10 +1540,16 @@ function renderHourList(routes, area){
     </div>
     <div class="hour-detail" id="hdet-${i}" style="display:none">${renderRoute(r,true,i)}</div>`;
   });
-  html+=`</div>`;
+  html+=`
+  <div style="margin:12px 10px 4px;text-align:center;">
+    <a href="https://kuruken.jp/#!" target="_self"
+      style="display:inline-block;background:#2a5298;color:white;font-size:13px;font-weight:700;
+             padding:10px 20px;border-radius:12px;text-decoration:none;letter-spacing:0.3px;">
+      🚌 くるけん｜バスの現在地・遅延確認
+    </a>
+  </div>
+  </div>`;
   area.innerHTML=html;
-  // routesをグローバル保持
-  window._currentRoutes=routes;
   // routesをグローバル保持
   window._currentRoutes=routes;
 }
