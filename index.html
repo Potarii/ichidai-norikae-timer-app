@@ -597,7 +597,8 @@ function getAstramOiArr(depMin){
 }
 
 // アストラム上り [大塚発, 毘沙門台着] 両駅記載便のみ（令和8年3月14日改正）
-const ASTRAM_KAERI_PAIRS = [
+// 帰路アストラム 平日（令和8年3月14日改正）大塚発→毘沙門台着
+const ASTRAM_KAERI_PAIRS_WD = [
   ['5:50','6:05'],['6:01','6:16'],['6:12','6:27'],['6:28','6:43'],
   ['6:40','6:55'],['6:50','7:05'],['7:00','7:15'],['7:12','7:27'],
   ['7:21','7:36'],['7:28','7:43'],['7:36','7:51'],['7:43','7:58'],
@@ -620,9 +621,33 @@ const ASTRAM_KAERI_PAIRS = [
   ['22:09','22:24'],['22:22','22:37'],['22:35','22:50'],['22:48','23:03'],
   ['23:00','23:15'],['23:12','23:27'],['23:25','23:40'],['23:37','23:52'],
 ];
-const ASTRAM_KAERI = ASTRAM_KAERI_PAIRS.map(([dep])=>dep);
+// 帰路アストラム 土日祝（令和8年3月14日改正）大塚発→毘沙門台着
+const ASTRAM_KAERI_PAIRS_HOL = [
+  ['5:50','6:05'],['6:08','6:23'],['6:25','6:40'],['6:38','6:53'],
+  ['6:50','7:05'],['7:00','7:15'],['7:10','7:25'],['7:19','7:34'],
+  ['7:28','7:43'],['7:36','7:51'],['7:44','7:59'],['7:52','8:07'],
+  ['8:00','8:15'],['8:08','8:23'],['8:16','8:31'],['8:24','8:39'],
+  ['8:32','8:47'],['8:41','8:56'],['8:51','9:06'],['9:01','9:16'],
+  ['9:11','9:26'],['9:21','9:36'],['9:31','9:46'],['9:41','9:56'],['9:51','10:06'],
+  ['10:01','10:16'],['10:11','10:26'],['10:21','10:36'],['10:31','10:46'],['10:41','10:56'],['10:51','11:06'],
+  ['11:01','11:16'],['11:11','11:26'],['11:21','11:36'],['11:31','11:46'],['11:41','11:56'],['11:51','12:06'],
+  ['12:01','12:16'],['12:11','12:26'],['12:21','12:36'],['12:31','12:46'],['12:41','12:56'],['12:51','13:06'],
+  ['13:01','13:16'],['13:11','13:26'],['13:21','13:36'],['13:31','13:46'],['13:41','13:56'],['13:51','14:06'],
+  ['14:01','14:16'],['14:11','14:26'],['14:21','14:36'],['14:31','14:46'],['14:41','14:56'],['14:51','15:06'],
+  ['15:01','15:16'],['15:11','15:26'],['15:21','15:36'],['15:31','15:46'],['15:41','15:56'],['15:51','16:06'],
+  ['16:11','16:26'],['16:21','16:36'],['16:31','16:46'],['16:41','16:56'],['16:51','17:06'],
+  ['17:01','17:16'],['17:11','17:26'],['17:21','17:36'],['17:31','17:46'],['17:41','17:56'],['17:51','18:06'],
+  ['18:01','18:16'],['18:11','18:26'],['18:21','18:36'],['18:31','18:46'],['18:41','18:56'],['18:51','19:06'],
+  ['19:01','19:16'],['19:12','19:27'],['19:24','19:39'],['19:36','19:51'],
+  ['19:48','20:03'],['20:00','20:15'],['20:13','20:28'],['20:27','20:42'],
+  ['20:42','20:57'],['20:57','21:12'],['21:12','21:27'],['21:27','21:42'],
+  ['21:42','21:57'],['21:57','22:12'],['22:12','22:27'],['22:27','22:42'],
+  ['22:42','22:57'],['22:57','23:12'],['23:12','23:27'],['23:25','23:40'],['23:37','23:52'],
+];
+const ASTRAM_KAERI_PAIRS = ASTRAM_KAERI_PAIRS_WD; // 後方互換のため残す
 function getAstramKaeriArr(depMin){
-  return ASTRAM_KAERI_PAIRS.map(([d,a])=>({dep:toMin(d),arr:toMin(a)})).find(p=>p.dep>=depMin)||null;
+  const pairs=dayType==='weekday'?ASTRAM_KAERI_PAIRS_WD:ASTRAM_KAERI_PAIRS_HOL;
+  return pairs.map(([d,a])=>({dep:toMin(d),arr:toMin(a)})).find(p=>p.dep>=depMin)||null;
 }
 
 
@@ -723,7 +748,7 @@ function findNextAstramHint(gArr, chosenAstramDep){
   const wait = chosenAstramDep - gArr;
   if(wait >= 5) return null; // 5分以上なら補足不要
   // 選んだ便の次のアストラム便を探す
-  const next = ASTRAM_KAERI_PAIRS.find(([d])=>toMin(d)>chosenAstramDep);
+  const next = ( dayType==="weekday"?ASTRAM_KAERI_PAIRS_WD:ASTRAM_KAERI_PAIRS_HOL).find(([d])=>toMin(d)>chosenAstramDep);
   if(!next) return null;
   return {dep: fmt(next[0]), arr: fmt(next[1])};
 }
@@ -928,7 +953,7 @@ function calcKaeri(inputMin,byArr=false){
   } else {
     const bArr=inputMin;
     const bMin=findPrev(bTimes,bArr-6); if(!bMin)return null;
-    const astPair=ASTRAM_KAERI_PAIRS.slice().reverse().find(([d,a])=>toMin(a)<=bMin-5);
+    const astPair=( dayType==="weekday"?ASTRAM_KAERI_PAIRS_WD:ASTRAM_KAERI_PAIRS_HOL).slice().reverse().find(([d,a])=>toMin(a)<=bMin-5);
     if(!astPair)return null;
     const aMin=toMin(astPair[0]),aArr=toMin(astPair[1]);
     // 逆算: アストラム大塚着のaMin-3以前に出発するバス
@@ -1014,7 +1039,7 @@ function calcKaeriAstram(inputMin,byArr=false){
     };
   } else {
     const aArr=inputMin;
-    const astPair=ASTRAM_KAERI_PAIRS.slice().reverse().find(([d,a])=>toMin(a)<=aArr);
+    const astPair=( dayType==="weekday"?ASTRAM_KAERI_PAIRS_WD:ASTRAM_KAERI_PAIRS_HOL).slice().reverse().find(([d,a])=>toMin(a)<=aArr);
     if(!astPair)return null;
     const aMin=toMin(astPair[0]),aArrT=toMin(astPair[1]);
     const gwPrev=getGwBusKaeri().slice().reverse().find(([,arr])=>toMin(arr)<=aMin-3);
@@ -1707,7 +1732,7 @@ function showBusList(){
     const kn=getNumataBusKaeri().map(([dep])=>dep+'(沼)');
     const kaeriTimes=[...kd,...kn].sort((a,b)=>toMin(a.split('(')[0])-toMin(b.split('(')[0]));
     html+=makeTimeTable(`① 📋 広電バス 市立大学前/沼田発→大塚駅着（${dayLabel}）`,kaeriTimes,'#e8f5e9','#f9fffe','#f1f8f4','※(市)=市立大学前発 (沼)=沼田料金所前発');
-    const astramKaeriTimes=ASTRAM_KAERI_PAIRS.map(([dep])=>dep);
+    const astramKaeriTimes=( dayType==="weekday"?ASTRAM_KAERI_PAIRS_WD:ASTRAM_KAERI_PAIRS_HOL).map(([dep])=>dep);
     html+=makeTimeTable(`② 🚃 アストラムライン 大塚駅発（本通り方面）（${dayLabel}）`,astramKaeriTimes,'#e8f0fb','#f8f9ff','#f0f4ff','※毘沙門台駅を通過する便のみ。毘沙門台駅まで約15分');
     if(dir==='kaeri_3chome'||dir==='kaeri'){
       const busKaeriTimes=BUS_KAERI[dt].map(([t,ten])=>ten?t+'('+ten+')':t);
